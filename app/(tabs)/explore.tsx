@@ -1,112 +1,238 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import * as Location from "expo-location";
+import React, { useState } from "react";
+import {
+  Alert,
+  Platform,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 
-import { Collapsible } from '@/components/ui/collapsible';
-import { ExternalLink } from '@/components/external-link';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Fonts } from '@/constants/theme';
+type Coords = { latitude: number; longitude: number };
 
-export default function TabTwoScreen() {
+export default function GeocoderScreen() {
+  const [addressInput, setAddressInput] = useState("fX Sudirman, Jakarta");
+  const [coords, setCoords]             = useState<Coords | null>(null);
+  const [resolvedAddress, setResolvedAddress] = useState("");
+  const [loading, setLoading]           = useState(false);
+
+  
+  const a11y = {
+    screenHeader: "Geocoder screen – convert addresses to coordinates and back",
+    input: {
+      label: "Address input field",
+      hint:  "Type a place or street address, then tap Geocode",
+    },
+    geocodeBtn: "Geocode button – converts the typed address into coordinates",
+    reverseBtn: "Reverse geocode button – converts current coordinates back into a readable address",
+    coordsDisplay: (lat: number, lng: number) =>
+      `Result: latitude ${lat.toFixed(4)}, longitude ${lng.toFixed(4)}`,
+    addressDisplay: (addr: string) => `Resolved address: ${addr}`,
+  };
+
+  
+  const handleGeocode = async () => {
+    if (!addressInput.trim()) {
+      Alert.alert("Empty input", "Please type an address first.");
+      return;
+    }
+    setLoading(true);
+    try {
+      const results = await Location.geocodeAsync(addressInput);
+      if (results.length === 0) {
+        Alert.alert("Not found", "No coordinates found for that address.");
+        return;
+      }
+      const { latitude, longitude } = results[0];
+      setCoords({ latitude, longitude });
+      setResolvedAddress(""); // clear old reverse result
+    } catch (err) {
+      console.error(err);
+      Alert.alert("Error", "Geocoding failed. Check your network.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  
+  const handleReverseGeocode = async () => {
+    if (!coords) {
+      Alert.alert("No coordinates", "Geocode an address first.");
+      return;
+    }
+    setLoading(true);
+    try {
+      const results = await Location.reverseGeocodeAsync(coords);
+      if (results.length === 0) {
+        Alert.alert("Not found", "Could not resolve those coordinates.");
+        return;
+      }
+      const r = results[0];
+      const parts = [r.streetNumber, r.street, r.district, r.city, r.region, r.country]
+        .filter(Boolean);
+      setResolvedAddress(parts.join(", "));
+    } catch (err) {
+      console.error(err);
+      Alert.alert("Error", "Reverse geocoding failed. Check your network.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#D0D0D0', dark: '#353636' }}
-      headerImage={
-        <IconSymbol
-          size={310}
-          color="#808080"
-          name="chevron.left.forwardslash.chevron.right"
-          style={styles.headerImage}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText
-          type="title"
-          style={{
-            fontFamily: Fonts.rounded,
-          }}>
-          Explore
-        </ThemedText>
-      </ThemedView>
-      <ThemedText>This app includes example code to help you get started.</ThemedText>
-      <Collapsible title="File-based routing">
-        <ThemedText>
-          This app has two screens:{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/explore.tsx</ThemedText>
-        </ThemedText>
-        <ThemedText>
-          The layout file in <ThemedText type="defaultSemiBold">app/(tabs)/_layout.tsx</ThemedText>{' '}
-          sets up the tab navigator.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/router/introduction">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Android, iOS, and web support">
-        <ThemedText>
-          You can open this project on Android, iOS, and the web. To open the web version, press{' '}
-          <ThemedText type="defaultSemiBold">w</ThemedText> in the terminal running this project.
-        </ThemedText>
-      </Collapsible>
-      <Collapsible title="Images">
-        <ThemedText>
-          For static images, you can use the <ThemedText type="defaultSemiBold">@2x</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">@3x</ThemedText> suffixes to provide files for
-          different screen densities
-        </ThemedText>
-        <Image
-          source={require('@/assets/images/react-logo.png')}
-          style={{ width: 100, height: 100, alignSelf: 'center' }}
-        />
-        <ExternalLink href="https://reactnative.dev/docs/images">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Light and dark mode components">
-        <ThemedText>
-          This template has light and dark mode support. The{' '}
-          <ThemedText type="defaultSemiBold">useColorScheme()</ThemedText> hook lets you inspect
-          what the user&apos;s current color scheme is, and so you can adjust UI colors accordingly.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/develop/user-interface/color-themes/">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Animations">
-        <ThemedText>
-          This template includes an example of an animated component. The{' '}
-          <ThemedText type="defaultSemiBold">components/HelloWave.tsx</ThemedText> component uses
-          the powerful{' '}
-          <ThemedText type="defaultSemiBold" style={{ fontFamily: Fonts.mono }}>
-            react-native-reanimated
-          </ThemedText>{' '}
-          library to create a waving hand animation.
-        </ThemedText>
-        {Platform.select({
-          ios: (
-            <ThemedText>
-              The <ThemedText type="defaultSemiBold">components/ParallaxScrollView.tsx</ThemedText>{' '}
-              component provides a parallax effect for the header image.
-            </ThemedText>
-          ),
-        })}
-      </Collapsible>
-    </ParallaxScrollView>
+    <View style={styles.container}>
+      {/* ── Title ── */}
+      <Text
+        style={styles.title}
+        accessible
+        accessibilityRole="header"
+        accessibilityLabel={a11y.screenHeader}
+      >
+        📍 GeoCoder
+      </Text>
+
+      {/* ── Address input ── */}
+      <Text style={styles.label}>Address</Text>
+      <TextInput
+        style={styles.input}
+        value={addressInput}
+        onChangeText={setAddressInput}
+        placeholder="e.g. Monas, Jakarta"
+        accessible
+        accessibilityLabel={a11y.input.label}
+        accessibilityHint={a11y.input.hint}
+      />
+
+      {/* ── Geocode button ── */}
+      <Pressable
+        style={[styles.btn, styles.btnPrimary]}
+        onPress={handleGeocode}
+        disabled={loading}
+        accessible
+        accessibilityLabel={a11y.geocodeBtn}
+        accessibilityRole="button"
+      >
+        <Text style={styles.btnText}>
+          {loading ? "Working…" : "Geocode Address →"}
+        </Text>
+      </Pressable>
+
+      {/* ── Coordinates result ── */}
+      {coords && (
+        <View
+          style={styles.resultBox}
+          accessible
+          accessibilityLabel={a11y.coordsDisplay(coords.latitude, coords.longitude)}
+        >
+          <Text style={styles.resultLabel}>Coordinates</Text>
+          <Text style={styles.resultValue}>
+            {coords.latitude.toFixed(6)},  {coords.longitude.toFixed(6)}
+          </Text>
+        </View>
+      )}
+
+      {/* ── Reverse geocode button ── */}
+      <Pressable
+        style={[styles.btn, styles.btnSecondary, !coords && styles.btnDisabled]}
+        onPress={handleReverseGeocode}
+        disabled={!coords || loading}
+        accessible
+        accessibilityLabel={a11y.reverseBtn}
+        accessibilityRole="button"
+      >
+        <Text style={[styles.btnText, !coords && styles.btnTextDisabled]}>
+          ← Reverse Geocode
+        </Text>
+      </Pressable>
+
+      {/* ── Resolved address result ── */}
+      {!!resolvedAddress && (
+        <View
+          style={styles.resultBox}
+          accessible
+          accessibilityLabel={a11y.addressDisplay(resolvedAddress)}
+        >
+          <Text style={styles.resultLabel}>Resolved Address</Text>
+          <Text style={styles.resultValue}>{resolvedAddress}</Text>
+        </View>
+      )}
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  headerImage: {
-    color: '#808080',
-    bottom: -90,
-    left: -35,
-    position: 'absolute',
+  container: {
+    flex: 1,
+    paddingTop: Platform.OS === "android" ? 50 : 80,
+    paddingHorizontal: 20,
+    backgroundColor: "#f8f9fa",
   },
-  titleContainer: {
-    flexDirection: 'row',
-    gap: 8,
+  title: {
+    fontSize: 24,
+    fontWeight: "bold",
+    marginBottom: 24,
+    color: "#1a1a2e",
+  },
+  label: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: "#555",
+    marginBottom: 4,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  input: {
+    borderColor: "#ccc",
+    borderWidth: 1,
+    borderRadius: 8,
+    padding: 10,
+    fontSize: 15,
+    backgroundColor: "#fff",
+    marginBottom: 14,
+  },
+  btn: {
+    paddingVertical: 13,
+    borderRadius: 8,
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  btnPrimary: {
+    backgroundColor: "#457b9d",
+  },
+  btnSecondary: {
+    backgroundColor: "#e63946",
+  },
+  btnDisabled: {
+    backgroundColor: "#ccc",
+  },
+  btnText: {
+    color: "#fff",
+    fontWeight: "600",
+    fontSize: 15,
+  },
+  btnTextDisabled: {
+    color: "#888",
+  },
+  resultBox: {
+    backgroundColor: "#fff",
+    borderRadius: 8,
+    padding: 14,
+    marginBottom: 16,
+    borderLeftWidth: 4,
+    borderLeftColor: "#457b9d",
+  },
+  resultLabel: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: "#888",
+    textTransform: "uppercase",
+    marginBottom: 4,
+  },
+  resultValue: {
+    fontSize: 16,
+    color: "#1a1a2e",
+    fontWeight: "500",
   },
 });

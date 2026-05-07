@@ -1,98 +1,105 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import React from "react";
+import { StyleSheet } from "react-native";
+import MapView, {
+  Circle,
+  Marker,
+  Polygon,
+  Polyline,
+  PROVIDER_DEFAULT,
+} from "react-native-maps";
 
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
 
-export default function HomeScreen() {
+const HOME       = { latitude: -6.2272, longitude: 106.7970 }; // Senayan City area
+const UNIVERSITY = { latitude: -6.2247, longitude: 106.8039 }; // fX Sudirman
+
+
+const ROUTE_TO_UNI = [
+  { latitude: -6.2272, longitude: 106.7970 }, // Home – Senayan City
+  { latitude: -6.2254, longitude: 106.7991 }, // Past Plaza Senayan
+  { latitude: -6.2247, longitude: 106.8039 }, // Arrive at fX Sudirman
+];
+
+const WEEKLY_SPOTS = [
+  { latitude: -6.2272, longitude: 106.7970 }, // Home – Senayan City
+  { latitude: -6.2254, longitude: 106.7991 }, // Plaza Senayan
+  { latitude: -6.2446, longitude: 106.8006 }, // Blok M Square
+  { latitude: -6.1878, longitude: 106.8236 }, // Sarinah
+  { latitude: -6.2247, longitude: 106.8039 }, // University – fX Sudirman
+];
+
+export default function App() {
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+    <MapView
+      provider={PROVIDER_DEFAULT}
+      style={styles.map}
+      initialRegion={{
+        latitude: -6.2200,
+        longitude: 106.8050,
+        latitudeDelta: 0.07,
+        longitudeDelta: 0.07,
+      }}
+    >
+      {/* ── Home marker ── */}
+      <Marker
+        coordinate={HOME}
+        title="My Home"
+        description="Senayan City area"
+        pinColor="blue"
+      />
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+      {/* ── University marker ── */}
+      <Marker
+        coordinate={UNIVERSITY}
+        title="My University"
+        description="fX Sudirman"
+        pinColor="green"
+      />
+
+      {/* ── Weekly location markers ── */}
+      <Marker
+        coordinate={{ latitude: -6.2254, longitude: 106.7991 }}
+        title="Plaza Senayan"
+        description="Weekly visit"
+      />
+      <Marker
+        coordinate={{ latitude: -6.2446, longitude: 106.8006 }}
+        title="Blok M Square"
+        description="Weekly visit"
+      />
+      <Marker
+        coordinate={{ latitude: -6.1878, longitude: 106.8236 }}
+        title="Sarinah"
+        description="Weekly visit"
+      />
+
+      {/* ── Polyline: route from home to university ── */}
+      <Polyline
+        coordinates={ROUTE_TO_UNI}
+        strokeColor="#e63946"
+        strokeWidth={4}
+      />
+
+      {/* ── Polygon: area covering all my weekly spots ── */}
+      <Polygon
+        coordinates={WEEKLY_SPOTS}
+        strokeColor="#457b9d"
+        fillColor="rgba(69,123,157,0.25)"
+        strokeWidth={3}
+      />
+
+      {/* ── Circle around home ── */}
+      <Circle
+        center={HOME}
+        radius={300}
+        strokeColor="#e63946"
+        fillColor="rgba(230,57,70,0.15)"
+      />
+    </MapView>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
-  },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  map: {
+    flex: 1,
   },
 });
