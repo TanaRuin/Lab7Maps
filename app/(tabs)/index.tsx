@@ -5,7 +5,7 @@ import MapView, {
   Marker,
   Polygon,
   Polyline,
-  PROVIDER_DEFAULT,
+  PROVIDER_GOOGLE,
 } from "react-native-maps";
 
 
@@ -30,7 +30,7 @@ const WEEKLY_SPOTS = [
 export default function App() {
   return (
     <MapView
-      provider={PROVIDER_DEFAULT}
+      provider={PROVIDER_GOOGLE}
       style={styles.map}
       initialRegion={{
         latitude: -6.2200,

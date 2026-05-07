@@ -1,14 +1,6 @@
-import * as Location from "expo-location";
+import * as Location from 'expo-location';
 import React, { useState } from "react";
-import {
-  Alert,
-  Platform,
-  Pressable,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import { Alert, Button, Platform, StyleSheet, Text, TextInput, View, Pressable } from 'react-native';
 
 type Coords = { latitude: number; longitude: number };
 
